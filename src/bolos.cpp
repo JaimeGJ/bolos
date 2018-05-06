@@ -9,17 +9,26 @@
 #include <geometry_msgs/Vector3.h>
 #include <nav_msgs/Odometry.h>
 
+    nav_msgs::Odometry odom_msgs;
+    geometry_msgs::Vector3 us_msgs;
+    
+void callback(const nav_msgs::Odometry::ConstPtr& msgs){
+		odom_msgs.pose.pose.position.x=msgs->pose.pose.position.x;
+		odom_msgs.pose.pose.orientation.z=msgs->pose.pose.orientation.z;
+}
 
+void us_callback(const geometry_msgs::Vector3::ConstPtr& msgs){
+		us_msgs.y=msgs->y;
+		}
 
 void posicionar(){
 
-    nav_msgs::Odometry odom_msgs;
+
     geometry_msgs::Twist vel_msg;
 
     ros::NodeHandle n;
-    ros::Subscriber odom_msgs = n.subscribe("/micro/odom",10);
+    ros::Subscriber sub = n.subscribe("/micro/odom",10,callback);
     ros::Publisher pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
-
 
     
     //Receiveing the user's input
@@ -33,7 +42,7 @@ void posicionar(){
 	    vel_msg.angular.y = 0;
 	    vel_msg.angular.z = 0;
 	    pub.publish(vel_msg);
-	    ros::Subscriber odom_msgs = n.subscribe("/micro/odom",10);
+	    ros::Subscriber sub = n.subscribe("/micro/odom",10,callback);
 	}
     while (odom_msgs.pose.pose.orientation.z <= 1.581){ //1.581 pi/2, 0.785 pi/4
 	    vel_msg.linear.x = 0;
@@ -43,7 +52,7 @@ void posicionar(){
 	    vel_msg.angular.y = 0;
 	    vel_msg.angular.z = 0.4;
 	    pub.publish(vel_msg);
-	    ros::Subscriber odom_msgs = n.subscribe("/micro/odom",10);
+	    ros::Subscriber sub = n.subscribe("/micro/odom",10,callback);
 	}
      vel_msg.angular.z = 0;
      pub.publish(vel_msg);
@@ -55,12 +64,11 @@ void posicionar(){
 void apuntar(){
 
     nav_msgs::Odometry odom_msgs;
-    geometry_msgs::Vector3 us_msgs;
     geometry_msgs::Twist vel_msg;
 
     ros::NodeHandle n;
-    ros::Subscriber odom_msgs = n.subscribe("/micro/odom",10);
-    ros::Subscriber us_msgs = n.subscribe("/micro/us",10);
+    ros::Subscriber sub_odom = n.subscribe("/micro/odom",10,callback);
+    ros::Subscriber sub_us = n.subscribe("/micro/us",10,us_callback);
     ros::Publisher pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
 
 
@@ -71,9 +79,9 @@ void apuntar(){
     int giro = 1;
 
     while (1){
-		ros::Subscriber us_msgs = n.subscribe("/micro/us",10);
+		ros::Subscriber sub = n.subscribe("/micro/us",10,us_callback);
         if (giro == 1){
-	    apuntado = us_msgs.y;
+	    apuntado=us_msgs.y;
 		if (abs(apuntado-anterior) >= 0.05){
 		    if (anterior > apuntado){
 		        anterior = apuntado;
@@ -94,7 +102,7 @@ void apuntar(){
 	        	    vel_msg.angular.z = 0;
 	        	    pub.publish(vel_msg);
 			        ROS_INFO("Objetivo apuntado");
-			        return 0;
+			        break;
 				}
 			}
 		    else{
@@ -104,7 +112,7 @@ void apuntar(){
 		}
 	    }
         else{
-	    apuntado = us_msgs.y;
+	    apuntado=us_msgs.y;
 		if (abs(apuntado-anterior) >= 0.05){
 		    if (anterior > apuntado){
 		        anterior = apuntado;
@@ -125,7 +133,7 @@ void apuntar(){
 	        	    vel_msg.angular.z = 0;
 	        	    pub.publish(vel_msg);
 			        ROS_INFO("Objetivo apuntado");
-			        return 0;
+			        break;
 				}
 			}
 		    else{
