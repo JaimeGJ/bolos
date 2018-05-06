@@ -210,6 +210,7 @@ int main (int argc, char  **argv)
     ros::init(argc, argv,"bolos_nodo");
     ROS_INFO("El nodo bolos_nodo ha sido lanzado");
     posicionar();
+    acercar();
 	apuntar();
-	acercar();
+
 }
